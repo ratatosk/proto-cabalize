@@ -52,8 +52,8 @@ main = let hooks = simpleUserHooks
         in defaultMainWithHooks hooks {confHook = myConfHook}
 
 myConfHook :: (GenericPackageDescription, HookedBuildInfo) -> ConfigFlags -> IO LocalBuildInfo
-myConfHook (pd, hbi) cf = do
-  lbi <- mainConf (pd, hbi) cf
+myConfHook x cf = do
+  lbi <- mainConf x cf
   let verb = fromFlag $ configVerbosity $ cf
   protoFiles <- filter (".proto" `isSuffixOf`) <$> getDirectoryContents protoDir
   modList <- nub . map fromString . concat <$> mapM (protoCompile verb) protoFiles
