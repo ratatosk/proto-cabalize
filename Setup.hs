@@ -44,16 +44,15 @@ protoCompile v src = do
   return $ map (map (\c -> if c == '/' then '.' else c) . (takeWhile (/= '.'))) . 
     catMaybes . map (stripPrefix $ destDir ++ "/") . lines $ out
 
+-- call main configuration routine, then generate haskell sources and push their module names 
+-- to the list of exposed modules of the library
 myConfHook :: (GenericPackageDescription, HookedBuildInfo) -> ConfigFlags -> IO LocalBuildInfo
 myConfHook x cf = do
-  lbi <- mainConf x cf
+  lbi <- (confHook simpleUserHooks) x cf
   let verb = fromFlag $ configVerbosity $ cf
   protoFiles <- filter (".proto" `isSuffixOf`) <$> getDirectoryContents protoDir
   modList <- nub . map fromString . concat <$> mapM (protoCompile verb) protoFiles
   return $ (accLocalPkgDescr ^: accLibrary ^: accExposedModules ^: (++modList)) lbi
-
-mainConf :: (GenericPackageDescription, HookedBuildInfo) -> ConfigFlags -> IO LocalBuildInfo
-mainConf = confHook simpleUserHooks
 
 main :: IO ()
 main = let hooks = simpleUserHooks 
