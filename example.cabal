@@ -1,0 +1,15 @@
+Name:                super-proto
+Version:             0.1
+Synopsis:            Super proto library
+License-file:        LICENSE
+Author:              John Smith
+Maintainer:          john@smith.xxx
+Category:            System
+Build-type:          Custom
+Cabal-version:       >=1.2
+
+Library
+  build-depends:
+    base >= 4,
+    protocol-buffers,
+    protocol-buffers-descriptor
