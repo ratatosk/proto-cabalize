@@ -1,5 +1,6 @@
 #!/usr/bin/env runhaskell
 
+import Control.Monad
 import Control.Applicative
 
 import Data.List
@@ -15,6 +16,7 @@ import Distribution.PackageDescription
 import Distribution.Verbosity
 import Distribution.Simple.Utils
 import System.Process
+import System.Exit
 import System.FilePath
 import System.Directory
 
@@ -40,7 +42,8 @@ protoCompile :: Verbosity -> FilePath -> IO [String]
 protoCompile v src = do
   notice v $ "Compiling proto definition: " ++ src
   let args = ["--proto_path=" ++ protoDir,"--haskell_out=" ++ destDir, protoDir </> src]
-  out <- readProcess "hprotoc" args ""
+  (ec,out,_) <- readProcessWithExitCode "hprotoc" args ""
+  when (ec /= ExitSuccess) $ die $ "hprotoc failed: " ++ show ec
   return $ map (replace '/' '.' . takeWhile (/= '.')) . 
     catMaybes . map (stripPrefix $ destDir ++ "/") . lines $ out
   where
@@ -58,4 +61,4 @@ myConfHook x cf = do
 
 main :: IO ()
 main = let hooks = simpleUserHooks 
-        in defaultMainWithHooks hooks {confHook = myConfHook}
+       in defaultMainWithHooks hooks {confHook = myConfHook}
