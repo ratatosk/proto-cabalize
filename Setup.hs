@@ -1,10 +1,7 @@
 #!/usr/bin/env runhaskell
 
-import Control.Monad
-import Control.Exception
 import Control.Applicative
 
-import Data.Char
 import Data.List
 import Data.Maybe
 
@@ -18,7 +15,6 @@ import Distribution.PackageDescription
 import Distribution.Verbosity
 import Distribution.Simple.Utils
 import System.Process
-import System.Exit
 import System.FilePath
 import System.Directory
 
@@ -48,9 +44,6 @@ protoCompile v src = do
   return $ map (map (\c -> if c == '/' then '.' else c) . (takeWhile (/= '.'))) . 
     catMaybes . map (stripPrefix $ destDir ++ "/") . lines $ out
 
-main = let hooks = simpleUserHooks 
-        in defaultMainWithHooks hooks {confHook = myConfHook}
-
 myConfHook :: (GenericPackageDescription, HookedBuildInfo) -> ConfigFlags -> IO LocalBuildInfo
 myConfHook x cf = do
   lbi <- mainConf x cf
@@ -59,4 +52,9 @@ myConfHook x cf = do
   modList <- nub . map fromString . concat <$> mapM (protoCompile verb) protoFiles
   return $ (accLocalPkgDescr ^: accLibrary ^: accExposedModules ^: (++modList)) lbi
 
+mainConf :: (GenericPackageDescription, HookedBuildInfo) -> ConfigFlags -> IO LocalBuildInfo
 mainConf = confHook simpleUserHooks
+
+main :: IO ()
+main = let hooks = simpleUserHooks 
+        in defaultMainWithHooks hooks {confHook = myConfHook}
