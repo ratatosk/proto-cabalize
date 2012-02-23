@@ -35,14 +35,16 @@ accLibrary = accessor (fromJust . library) (\a r -> r {library = Just a})
 accExposedModules :: Accessor Library [ModuleName]
 accExposedModules = accessor exposedModules (\a r -> r {exposedModules = a})
 
--- compile .proto file and return a list of generated modules
+-- compile .proto file and return a list of generated modules parsed from hprotoc stdout
 protoCompile :: Verbosity -> FilePath -> IO [String]
 protoCompile v src = do
   notice v $ "Compiling proto definition: " ++ src
   let args = ["--proto_path=" ++ protoDir,"--haskell_out=" ++ destDir, protoDir </> src]
   out <- readProcess "hprotoc" args ""
-  return $ map (map (\c -> if c == '/' then '.' else c) . (takeWhile (/= '.'))) . 
+  return $ map (replace '/' '.' . takeWhile (/= '.')) . 
     catMaybes . map (stripPrefix $ destDir ++ "/") . lines $ out
+  where
+    replace x y = map (\c -> if c == x then y else c)
 
 -- call main configuration routine, then generate haskell sources and push their module names 
 -- to the list of exposed modules of the library
